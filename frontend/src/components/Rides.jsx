@@ -30,7 +30,7 @@ const rideOffers = [
   ],
 ];
 
-export default function RideOffersPage() {
+export default function Rides() {
   return (
     <div className="flex flex-col items-center p-4">
       {/* Search Bar */}
@@ -39,8 +39,8 @@ export default function RideOffersPage() {
       </div>
 
       {/* Ride Offers List */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 md:gap-4">
-        <div className="col-span-1 md:col-span-2">
+      <div className="w-full max-w-4xl flex flex-col justify-center">
+        <div className="col-span-1 md:col-span-2 justify-center items-center">
           {rideOffers.map((offer, index) => (
             <RideOfferCard
               key={index}

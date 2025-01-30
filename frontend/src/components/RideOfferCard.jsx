@@ -15,7 +15,7 @@ export default function RideOfferCard({
   seatsLeft,
 }) {
   return (
-    <div className="border rounded-lg p-3 flex flex-col sm:flex-row items-start gap-3 sm:gap-4 w-full hover:bg-gray-50 transition-colors">
+    <div className="border rounded-lg p-3 flex flex-col sm:flex-row items-start gap-3 sm:gap-4 w-full hover:bg-gray-50 transition-colors my-4 mx-auto">
       {/* Profile Section */}
       <div className="flex items-center gap-3 min-w-[180px]">
         <Avatar src={profilePic} alt={username} className="w-10 h-10" />

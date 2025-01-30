@@ -7,7 +7,7 @@ export default function SearchBar() {
   const [date, setDate] = useState("");
 
   return (
-    <div className="flex flex-col sm:flex-row bg-white rounded-full p-2 shadow-md w-full max-w-3xl gap-2 sm:gap-4 items-center">
+    <div className="flex flex-col sm:flex-row bg-white rounded-lg p-5 shadow-md w-full max-w-3xl gap-2 sm:gap-4 items-center mx-auto">
       {/* From Input */}
       <div className="flex items-center bg-gray-200 px-4 py-2 rounded-lg w-full sm:w-auto">
         <LocationOn className="text-black" />
