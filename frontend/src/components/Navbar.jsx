@@ -13,16 +13,16 @@ const Navbar = () => {
       <div className="mx-auto md:w-8/12 w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="text-2xl font-bold text-gray-800">RidePool</div>
+          <Link to="/" className="text-2xl font-bold text-gray-800">RidePool</Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <button className="text-gray-600 hover:text-green-600 transition-colors duration-200">
+            <Link to="/rides" className="text-gray-600 hover:text-green-600 transition-colors duration-200">
               Find Riders
-            </button>
-            <button className="text-gray-600 hover:text-orange-700 transition-colors duration-200">
+            </Link>
+            <Link to="/rides" className="text-gray-600 hover:text-orange-700 transition-colors duration-200">
               Find Drivers
-            </button>
+            </Link>
             <AccountCircleIcon className="text-gray-600 h-8 w-8" />
           </div>
 
@@ -47,10 +47,10 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <button className="block w-full text-left px-3 py-2 text-gray-600 hover:text-blue-600">
+            <Link to="/rides" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-green-600">
               Find Riders
-            </button>
-            <Link to ="/rides" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-blue-600">
+            </Link>
+            <Link to ="/rides" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-orange-700">
               Find Drivers
             </Link>
           </div>

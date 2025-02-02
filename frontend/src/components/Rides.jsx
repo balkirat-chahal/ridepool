@@ -1,7 +1,9 @@
 import RideOfferCard from "./RideOfferCard";
 import SearchBar from "./SearchBar";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-const rideOffers = [
+let rideOffers = [
   [
     "Elliot",
     "https://via.placeholder.com/80",
@@ -31,11 +33,69 @@ const rideOffers = [
 ];
 
 export default function Rides() {
+  // State for search parameters
+  const [type, setType] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [date, setDate] = useState('');
+
+  // Parse URL parameters when the component mounts
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+
+    // Set type (always present in the URL)
+    const urlType = queryParams.get('type');
+    if (urlType) {
+      setType(urlType);
+    }
+
+    // Set from (optional)
+    const urlFrom = queryParams.get('from');
+    if (urlFrom) {
+      setFrom(urlFrom);
+    }
+
+    // Set to (optional)
+    const urlTo = queryParams.get('to');
+    if (urlTo) {
+      setTo(urlTo);
+    }
+
+    // Set date (optional)
+    const urlDate = queryParams.get('date');
+    if (urlDate) {
+      setDate(urlDate);
+    }
+  }, []);
+
+  // Fetch ride offers based on the search parameters 
+  useEffect(() => {
+    console.log("hello");
+    if (type) {
+      axios.get("/api", { params: { type, from, to, date } })
+        .then((response) => {
+          console.log("Ride offers:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching ride offers:", error);
+        });
+    }
+  }, [type, from, to, date]);
+
   return (
     <div className="flex flex-col items-center p-4">
       {/* Search Bar */}
       <div className="w-full max-w-4xl mb-6">
-        <SearchBar />
+      <SearchBar
+          type={type}
+          setType={setType}
+          from={from}
+          setFrom={setFrom}
+          to={to}
+          setTo={setTo}
+          date={date}
+          setDate={setDate}
+        />
       </div>
 
       {/* Ride Offers List */}

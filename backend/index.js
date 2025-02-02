@@ -13,4 +13,5 @@ app.listen(port, () => {
 
 app.get("/api", (req, res) => {
     console.log("Received Request");
+    res.send("Recerived Request");
 })
