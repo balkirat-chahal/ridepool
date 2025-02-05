@@ -17,11 +17,11 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/rides" className="text-gray-600 hover:text-green-600 transition-colors duration-200">
-              Find Riders
+            <Link to="/new?type=0" className="text-gray-600 hover:text-green-600 transition-colors duration-200">
+              Post a ride
             </Link>
-            <Link to="/rides" className="text-gray-600 hover:text-orange-700 transition-colors duration-200">
-              Find Drivers
+            <Link to="/new?type=1" className="text-gray-600 hover:text-orange-700 transition-colors duration-200">
+              Post a Request
             </Link>
             <AccountCircleIcon className="text-gray-600 h-8 w-8" />
           </div>
@@ -47,11 +47,11 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link to="/rides" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-green-600">
-              Find Riders
+            <Link to="/new?type=0" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-green-600">
+              Post a Ride
             </Link>
-            <Link to ="/rides" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-orange-700">
-              Find Drivers
+            <Link to ="/new?type=1" className="block w-full text-left px-3 py-2 text-gray-600 hover:text-orange-700">
+              Post a Request
             </Link>
           </div>
         </div>
