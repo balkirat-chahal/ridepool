@@ -17,10 +17,10 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/new?type=0" className="text-gray-600 hover:text-green-600 transition-colors duration-200">
+            <Link to="/newride" className="text-gray-600 hover:text-green-600 transition-colors duration-200">
               Post a ride
             </Link>
-            <Link to="/new?type=1" className="text-gray-600 hover:text-orange-700 transition-colors duration-200">
+            <Link to="/newrequest" className="text-gray-600 hover:text-orange-700 transition-colors duration-200">
               Post a Request
             </Link>
             <AccountCircleIcon className="text-gray-600 h-8 w-8" />

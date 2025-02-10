@@ -54,7 +54,7 @@ export default function Home() {
                 onChange={(e) => setRiderDate(e.target.value)}
               />
             </div>
-            <Link to={`/rides?type=0&from=${encodeURIComponent(riderFrom)}&to=${encodeURIComponent(riderTo)}&date=${encodeURIComponent(riderDate)}`}>
+            <Link to={`/rides?from=${encodeURIComponent(riderFrom)}&to=${encodeURIComponent(riderTo)}&date=${encodeURIComponent(riderDate)}`}>
               <button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg py-2 items-center justify-center hover:cursor-pointer">
                 <p className="mx-auto">Find a ride</p>
               </button>
@@ -151,7 +151,7 @@ export default function Home() {
                 onChange={(e) => setDriverDate(e.target.value)}
               />
             </div>
-            <Link to={`/rides?type=1&from=${encodeURIComponent(driverFrom)}&to=${encodeURIComponent(driverTo)}&date=${encodeURIComponent(driverDate)}`}>
+            <Link to={`/requests?from=${encodeURIComponent(driverFrom)}&to=${encodeURIComponent(driverTo)}&date=${encodeURIComponent(driverDate)}`}>
               <button className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-2 hover:cursor-pointer">
                 Find Riders
               </button>

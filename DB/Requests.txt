@@ -1,0 +1,6 @@
+get at /api/rides
+get at /api/requests
+post at /api/rides/new
+post at /api/requests/new
+get at /api/rides/:id
+get at /api/requests/:id
