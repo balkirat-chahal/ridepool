@@ -27,38 +27,28 @@ let rideRequests = [
 ];
 
 export default function Requests() {
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [date, setDate] = useState('');
+    const [filters, setFilters] = useState({ from: '', to: '', date: '' });
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const urlFrom = queryParams.get('from');
-    const urlTo = queryParams.get('to');
-    const urlDate = queryParams.get('date');
-
-    if (urlFrom) setFrom(urlFrom);
-    if (urlTo) setTo(urlTo);
-    if (urlDate) setDate(urlDate);
-  }, []);
-
-  useEffect(() => {
-    axios.get("/api", { params: { from, to, date } })
-      .then(response => console.log("Ride requests:", response.data))
-      .catch(error => console.error("Error fetching ride requests:", error));
-  }, [from, to, date]);
+    useEffect(() => {
+      console.log("Sending requests get");
+      const queryParams = new URLSearchParams(window.location.search);
+      setFilters({
+        from: queryParams.get('from') || '',
+        to: queryParams.get('to') || '',
+        date: queryParams.get('date') || ''
+      });
+    }, []);
+  
+    useEffect(() => {
+      axios.get("/api/requests", { params: filters })
+        .then(response => console.log("Ride offers:", response.data))
+        .catch(error => console.error("Error fetching ride offers:", error));
+    }, [filters]);
 
   return (
     <div className="flex flex-col items-center p-4">
       <div className="w-full max-w-4xl mb-6">
-        <SearchBar
-          from={from}
-          setFrom={setFrom}
-          to={to}
-          setTo={setTo}
-          date={date}
-          setDate={setDate}
-        />
+        <SearchBar currentFilters={filters} onFiltersChange={setFilters} />
       </div>
 
       <div className="w-full max-w-4xl flex flex-col justify-center">

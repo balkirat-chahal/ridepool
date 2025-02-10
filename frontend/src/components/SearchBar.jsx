@@ -1,22 +1,16 @@
+// SearchBar.js
 import { useState, useEffect } from "react";
 import { LocationOn, SwapHoriz, CalendarToday } from "@mui/icons-material";
 
-export default function SearchBar({ from, setFrom, to, setTo, date, setDate }) {
-  const [fromLocal, setFromLocal] = useState("");
-  const [toLocal, setToLocal] = useState("");
-  const [dateLocal, setDateLocal] = useState("");
+export default function SearchBar({ currentFilters, onFiltersChange }) {
+  const [localFilters, setLocalFilters] = useState(currentFilters);
 
-  // Sync local state with props on mount
   useEffect(() => {
-    setFromLocal(from);
-    setToLocal(to);
-    setDateLocal(date);
-  }, [from, to, date]);
+    setLocalFilters(currentFilters);
+  }, [currentFilters]);
 
   const handleSearch = () => {
-    setFrom(fromLocal);
-    setTo(toLocal);
-    setDate(dateLocal);
+    onFiltersChange(localFilters);
   };
 
   return (
@@ -27,8 +21,8 @@ export default function SearchBar({ from, setFrom, to, setTo, date, setDate }) {
         <input
           type="text"
           placeholder="From"
-          value={fromLocal}
-          onChange={(e) => setFromLocal(e.target.value)}
+          value={localFilters.from}
+          onChange={(e) => setLocalFilters(prev => ({ ...prev, from: e.target.value }))}
           className="bg-transparent w-full focus:outline-none px-2"
         />
       </div>
@@ -42,8 +36,8 @@ export default function SearchBar({ from, setFrom, to, setTo, date, setDate }) {
         <input
           type="text"
           placeholder="To"
-          value={toLocal}
-          onChange={(e) => setToLocal(e.target.value)}
+          value={localFilters.to}
+          onChange={(e) => setLocalFilters(prev => ({ ...prev, to: e.target.value }))}
           className="bg-transparent w-full focus:outline-none px-2"
         />
       </div>
@@ -53,8 +47,8 @@ export default function SearchBar({ from, setFrom, to, setTo, date, setDate }) {
         <CalendarToday className="text-black" />
         <input
           type="date"
-          value={dateLocal}
-          onChange={(e) => setDateLocal(e.target.value)}
+          value={localFilters.date}
+          onChange={(e) => setLocalFilters(prev => ({ ...prev, date: e.target.value }))}
           className="bg-transparent w-full focus:outline-none px-2"
         />
       </div>
