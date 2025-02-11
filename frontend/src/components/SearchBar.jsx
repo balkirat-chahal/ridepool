@@ -55,7 +55,7 @@ export default function SearchBar({ currentFilters, onFiltersChange }) {
       
       {/* Search Button */}
       <button 
-        className="bg-black text-white px-6 py-2 rounded-lg font-semibold w-full sm:w-auto"
+        className="bg-black text-white px-6 py-2 rounded-lg font-semibold w-full sm:w-auto hover:cursor-pointer"
         onClick={handleSearch}
       >
         Search
