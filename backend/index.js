@@ -59,13 +59,14 @@ const getCoordinates = async (location) => {
         let cityName = data.features[0].text; // Default to main feature name
         if (data.features[0].context) {
             for (const ctx of data.features[0].context) {
+                console.log(ctx.id, ctx.text);
                 if (ctx.id.startsWith("place")) {
                     cityName = ctx.text;
                     break;
                 }
             }
         }
-
+        console.log({lat, lng, cityName});
         return { lat, lng, city: cityName };
     } catch (error) {
         console.error("Error fetching coordinates:", error.message);
@@ -128,8 +129,8 @@ app.get("/api/rides", async (req, res) => {
     // Use extracted city names in SQL query
     const query = `
     SELECT *, 
-        (SQRT(POW(from_lat - ?, 2) + POW(from_lng - ?, 2)) + 
-         SQRT(POW(to_lat - ?, 2) + POW(to_lng - ?, 2))) AS total_distance
+        (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
+         ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
     FROM Rides
     WHERE LOWER(from_city) = LOWER(?) 
       AND LOWER(to_city) = LOWER(?) 
@@ -139,7 +140,7 @@ app.get("/api/rides", async (req, res) => {
 
     db.query(
         query,
-        [fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng, fromCoords.city, toCoords.city, date],
+        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, fromCoords.city, toCoords.city, date],
         (err, results) => {
             if (err) {
                 console.error("Error fetching rides:", err);
@@ -170,8 +171,8 @@ app.get("/api/requests", async (req, res) => {
     // Use extracted city names in SQL query
     const query = `
     SELECT *, 
-        (SQRT(POW(from_lat - ?, 2) + POW(from_lng - ?, 2)) + 
-         SQRT(POW(to_lat - ?, 2) + POW(to_lng - ?, 2))) AS total_distance
+        (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
+         ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
     FROM Requests
     WHERE LOWER(from_city) = LOWER(?) 
       AND LOWER(to_city) = LOWER(?) 
@@ -181,7 +182,7 @@ app.get("/api/requests", async (req, res) => {
 
     db.query(
         query,
-        [fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng, fromCoords.city, toCoords.city, date],
+        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, fromCoords.city, toCoords.city, date],
         (err, results) => {
             if (err) {
                 console.error("Error fetching requests:", err);
