@@ -128,13 +128,16 @@ app.get("/api/rides", async (req, res) => {
 
     // Use extracted city names in SQL query
     const query = `
-    SELECT *, 
-        (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
-         ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
+    SELECT Rides.*, 
+           Users.first_name AS driver_first_name, 
+           Users.last_name AS driver_last_name, 
+           (ST_Distance_Sphere(POINT(Rides.from_lng, Rides.from_lat), POINT(?, ?)) + 
+            ST_Distance_Sphere(POINT(Rides.to_lng, Rides.to_lat), POINT(?, ?))) AS total_distance
     FROM Rides
-    WHERE LOWER(from_city) = LOWER(?) 
-      AND LOWER(to_city) = LOWER(?) 
-      AND date = ?
+    LEFT JOIN Users ON Rides.driverID = Users.ID
+    WHERE LOWER(Rides.from_city) = LOWER(?) 
+      AND LOWER(Rides.to_city) = LOWER(?) 
+      AND Rides.date = ?
     ORDER BY total_distance ASC
     `;
 
@@ -170,13 +173,16 @@ app.get("/api/requests", async (req, res) => {
 
     // Use extracted city names in SQL query
     const query = `
-    SELECT *, 
-        (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
-         ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
+    SELECT Requests.*, 
+           Users.first_name AS requester_first_name, 
+           Users.last_name AS requester_last_name, 
+           (ST_Distance_Sphere(POINT(Requests.from_lng, Requests.from_lat), POINT(?, ?)) + 
+            ST_Distance_Sphere(POINT(Requests.to_lng, Requests.to_lat), POINT(?, ?))) AS total_distance
     FROM Requests
-    WHERE LOWER(from_city) = LOWER(?) 
-      AND LOWER(to_city) = LOWER(?) 
-      AND date = ?
+    LEFT JOIN Users ON Requests.userID = Users.ID
+    WHERE LOWER(Requests.from_city) = LOWER(?) 
+      AND LOWER(Requests.to_city) = LOWER(?) 
+      AND Requests.date = ?
     ORDER BY total_distance ASC
     `;
 
