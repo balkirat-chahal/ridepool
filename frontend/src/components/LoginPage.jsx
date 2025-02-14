@@ -5,6 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,11 +14,15 @@ const LoginPage = () => {
     password: ''
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle login logic here
-    console.log('Login data:', formData);
-  };
+  const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post('/api/login', formData, { withCredentials: true });
+            console.log('Login Response:', response.data);
+        } catch (error) {
+            console.log('Login Error:', error.response?.data || error.message);
+        }
+    };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">

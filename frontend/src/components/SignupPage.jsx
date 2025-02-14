@@ -9,6 +9,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,14 +18,27 @@ const SignupPage = () => {
     firstName: '',
     lastName: '',
     dob: null,
-    password: ''
+    password: '',
+    make: '',
+    model: '',
+    year: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form data:', formData);
-  };
+    try {
+        const formattedDob = formData.dob ? dayjs(formData.dob).format('YYYY-MM-DD') : null;
+
+        const response = await axios.post('/api/signup', 
+            { ...formData, dob: formattedDob }, 
+            { withCredentials: true }
+        );
+        
+        console.log('Signup Response:', response.data);
+    } catch (error) {
+        console.log('Signup Error:', error.response?.data || error.message);
+    }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -72,6 +86,29 @@ const SignupPage = () => {
                   maxDate={dayjs().subtract(18, 'year')}
                 />
               </LocalizationProvider>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <TextField
+                  label="Car Make"
+                  variant="outlined"
+                  value={formData.make}
+                  onChange={(e) => setFormData({...formData, make: e.target.value})}
+                />
+                <TextField
+                  label="Car Model"
+                  variant="outlined"
+                  value={formData.model}
+                  onChange={(e) => setFormData({...formData, model: e.target.value})}
+                />
+                <TextField
+                  label="Car Year"
+                  variant="outlined"
+                  type="number"
+                  inputProps={{ min: "1900", max: new Date().getFullYear() + 1 }}
+                  value={formData.year}
+                  onChange={(e) => setFormData({...formData, year: e.target.value})}
+                />
+              </div>
 
               <TextField
                 label="Password"

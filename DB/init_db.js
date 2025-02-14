@@ -52,10 +52,12 @@ CREATE TABLE IF NOT EXISTS Rides (
 CREATE TABLE IF NOT EXISTS Bookings (
     rideID INT,
     riderID INT,
+    status ENUM('pending', 'confirmed', 'completed') NOT NULL DEFAULT 'pending',
     PRIMARY KEY (rideID, riderID),
     FOREIGN KEY (rideID) REFERENCES Rides(TID) ON DELETE CASCADE,
     FOREIGN KEY (riderID) REFERENCES Users(ID) ON DELETE CASCADE
 );
+
 
 CREATE TABLE IF NOT EXISTS Requests (
     RID INT AUTO_INCREMENT PRIMARY KEY,

@@ -2,6 +2,11 @@ import express from 'express';
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import bcrypt from 'bcrypt';
+import passport from 'passport';
+import session from 'express-session';
+import LocalStrategy from 'passport-local';
+import cors from 'cors';
 
 // Load environment variables
 dotenv.config();
@@ -9,7 +14,7 @@ dotenv.config();
 // ******** DB CONNECTION **********
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root', // Change if using a different user
+    user: 'root',
     password: process.env.DB_PASS,
     database: 'ridepool'
 });
@@ -26,16 +31,44 @@ db.connect(err => {
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server listening on port: ${port}`);
 });
 
-app.get("/api", (req, res) => {
-    console.log("Received Request");
-    res.send("Received Request");
+// ******** PASSPORT CONFIGURATION **********
+passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
+    db.query('SELECT * FROM Users WHERE email = ?', [email], async (err, results) => {
+        if (err) return done(err);
+        if (results.length === 0) return done(null, false, { message: 'User not found' });
+
+        const user = results[0];
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return done(null, false, { message: 'Incorrect password' });
+
+        return done(null, user);
+    });
+}));
+
+passport.serializeUser((user, done) => done(null, user.ID));
+passport.deserializeUser((id, done) => {
+    db.query('SELECT * FROM Users WHERE ID = ?', [id], (err, results) => {
+        if (err) return done(err);
+        return done(null, results[0]);
+    });
 });
+
+
+
 
 // ******** MAP BOX ********
 const MAPBOX_API_KEY = process.env.MAPBOX_API_KEY; // Store this in your .env file
@@ -103,10 +136,48 @@ const geocode = async (location) => {
 };
 
 
+// Function to check if the user is authenticated
+const isAuthenticated = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.status(401).json({ error: 'Unauthorized' });
+};
+
+
 
 
 
 // ******** API ROUTES ********
+
+// ******** AUTH ROUTES **********
+app.post('/api/signup', async (req, res) => {
+    console.log("Signing Up");
+    const { email, firstName, lastName, dob, password, make, model, year } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    db.query('INSERT INTO Users (first_name, last_name, DOB, email, password) VALUES (?, ?, ?, ?, ?)', 
+        [firstName, lastName, dob, email, hashedPassword], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        const userID = result.insertId;
+        db.query('INSERT INTO Vehicles (make, model, year, ownerID) VALUES (?, ?, ?, ?)', 
+            [make, model, year, userID], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'User registered successfully' });
+        });
+    });
+});
+
+app.post('/api/login', passport.authenticate('local'), (req, res) => {
+    console.log("Logged In");
+    res.json({ message: 'Login successful', user: req.user });
+});
+
+app.get('/api', (req, res) => {
+    console.log('Received Request');
+    res.send('Received Request');
+});
 
 // Get Rides API
 // Get Rides API
