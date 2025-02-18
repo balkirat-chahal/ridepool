@@ -1,5 +1,5 @@
 // PostRequestForm.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -8,6 +8,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const PostRequestForm = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +20,27 @@ const PostRequestForm = () => {
     riders: ''
   });
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Define the async function
+    const checkAuthentication = async () => {
+      try {
+        const response = await axios.get('/api/authenticate');
+        console.log('Response:', response.data);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          navigate('/login', { state: { from: '/newrequest' } });
+        } else {
+          console.error('Error checking authentication:', error);
+        }
+      }
+    };
+
+    // Call the async function
+    checkAuthentication();
+  }, [navigate]); // Add `navigate` to the dependency array
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = {
@@ -29,10 +51,15 @@ const PostRequestForm = () => {
     };
 
     try {
-      const response = await axios.post('/api/requests/new', payload);
+      const response = await axios.post('/api/requests/new', payload, {withCredentials: true});
       console.log('Response:', response.data);
     } catch (error) {
-      console.error('Error posting request:', error);
+      if (error.response && error.response.status == 401){
+        navigate("/login", {state: { from: "/newrequest" }});
+      }
+      else {
+        console.log("Error posting request: ", error);
+      }
     }
   };
 

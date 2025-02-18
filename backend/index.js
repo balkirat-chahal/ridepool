@@ -179,6 +179,10 @@ app.get('/api', (req, res) => {
     res.send('Received Request');
 });
 
+app.get('/api/authenticate', isAuthenticated, (req, res) => {
+    res.send('Authenticated');
+});
+
 // Get Rides API
 // Get Rides API
 app.get("/api/rides", isAuthenticated, async (req, res) => {
@@ -269,11 +273,12 @@ app.get("/api/requests", isAuthenticated, async (req, res) => {
 });
 
 
-app.post("/api/rides/new", async (req, res) => {
+app.post("/api/rides/new", isAuthenticated, async (req, res) => {
     console.log("Received ride data:", req.body);
     const { from, to, datetime, price, seats } = req.body;
+    const driverID = req.user.ID; // Get user ID from authenticated request
     
-    if (!from || !to || !datetime || !price || !seats) {
+    if (!from || !to || !datetime || !price || !seats || !driverID) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -286,10 +291,11 @@ app.post("/api/rides/new", async (req, res) => {
 
     const [date, time] = datetime.split("T");
 
-    const query = `INSERT INTO Rides (from_street, from_city, from_province, from_lat, from_lng, to_street, to_city, to_province, to_lat, to_lng, date, time, price, seats, status) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO Rides (driverID, from_street, from_city, from_province, from_lat, from_lng, to_street, to_city, to_province, to_lat, to_lng, date, time, price, seats, status) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     db.query(query, [
+        driverID,
         fromCoords.street || null, fromCoords.city, fromCoords.province || null, fromCoords.lat || null, fromCoords.lng || null,
         toCoords.street || null, toCoords.city, toCoords.province || null, toCoords.lat || null, toCoords.lng || null,
         date, time.replace(".000Z", ""), price, seats, "pending"
@@ -302,11 +308,12 @@ app.post("/api/rides/new", async (req, res) => {
     });
 });
 
-app.post("/api/requests/new", async (req, res) => {
+app.post("/api/requests/new", isAuthenticated, async (req, res) => {
     console.log("Request Data Received:", req.body);
     const { from, to, datetime, price } = req.body;
+    const userID = req.user.ID; // Get user ID from authenticated request
     
-    if (!from || !to || !datetime || !price) {
+    if (!from || !to || !datetime || !price || !userID) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -319,10 +326,11 @@ app.post("/api/requests/new", async (req, res) => {
 
     const [date, time] = datetime.split("T");
 
-    const query = `INSERT INTO Requests (from_street, from_city, from_province, from_lat, from_lng, to_street, to_city, to_province, to_lat, to_lng, date, time, price) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO Requests (userID, from_street, from_city, from_province, from_lat, from_lng, to_street, to_city, to_province, to_lat, to_lng, date, time, price) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     db.query(query, [
+        userID,
         fromCoords.street || null, fromCoords.city, fromCoords.province || null, fromCoords.lat || null, fromCoords.lng || null,
         toCoords.street || null, toCoords.city, toCoords.province || null, toCoords.lat || null, toCoords.lng || null,
         date, time.replace(".000Z", ""), price
@@ -334,6 +342,7 @@ app.post("/api/requests/new", async (req, res) => {
         res.json({ message: "Request posted successfully" });
     });
 });
+
 
 
 
