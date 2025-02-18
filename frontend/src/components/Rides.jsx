@@ -1,14 +1,19 @@
 import RideOfferCard from "./RideOfferCard";
 import SearchBar from "./SearchBar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from 'react-router-dom';
 
 export default function Rides() {
   const [filters, setFilters] = useState({ from: '', to: '', date: '' });
   const [rideOffers, setRideOffers] = useState([]);
+  const initialUrl = useRef('');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("Sending rides get");
+    initialUrl.current = window.location.pathname + window.location.search;
     const queryParams = new URLSearchParams(window.location.search);
     setFilters({
       from: queryParams.get('from') || '',
@@ -23,7 +28,16 @@ export default function Rides() {
         console.log("Ride offers:", response.data);
         setRideOffers(response.data);
       })
-      .catch(error => console.error("Error fetching ride offers:", error));
+      .catch(error => {
+        if (error.response && error.response.status === 401) {
+          // Redirect to login page with the 'from' state
+          // const url = window.location.pathname + window.location.search;
+          console.log("Rides URL: ", initialUrl)
+          navigate('/login', { state: { from: initialUrl.current } });
+        } else {
+          console.error("Error fetching ride offers:", error);
+        }
+      });
   }, [filters]);
 
   return (

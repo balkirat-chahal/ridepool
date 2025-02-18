@@ -10,6 +10,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate, useLocation } from 'react-router-dom';
+
 
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +26,11 @@ const SignupPage = () => {
     year: ''
   });
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from || '/';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -35,6 +42,9 @@ const SignupPage = () => {
         );
         
         console.log('Signup Response:', response.data);
+        navigate('/login', { 
+          state: { from: from }  // Pass current path as state
+        });
     } catch (error) {
         console.log('Signup Error:', error.response?.data || error.message);
     }

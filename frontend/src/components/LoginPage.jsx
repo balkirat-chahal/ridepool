@@ -6,6 +6,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,15 +15,29 @@ const LoginPage = () => {
     password: ''
   });
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from || '/';
+
   const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const response = await axios.post('/api/login', formData, { withCredentials: true });
             console.log('Login Response:', response.data);
+            console.log('From Url:', from);
+            navigate(from, { 
+              state: { from: from }  // Pass current path as state
+            });
         } catch (error) {
             console.log('Login Error:', error.response?.data || error.message);
         }
     };
+  
+  const onCreateClick = (e) => {
+    e.preventDefault();
+    navigate('/signup', {state: {from: from}});
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -83,9 +98,9 @@ const LoginPage = () => {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link to="/signup" className="text-green-600 hover:text-green-700 font-medium">
+            <button onClick = {onCreateClick} className="text-green-600 hover:text-green-700 font-medium hover:cursor-pointer">
               Create one
-            </Link>
+            </button>
           </p>
         </div>
       </div>

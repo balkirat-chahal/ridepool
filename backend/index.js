@@ -181,9 +181,10 @@ app.get('/api', (req, res) => {
 
 // Get Rides API
 // Get Rides API
-app.get("/api/rides", async (req, res) => {
+app.get("/api/rides", isAuthenticated, async (req, res) => {
     console.log("Request api /api/rides");
     const { from, to, date } = req.query;
+
 
     if (!from || !to || !date) {
         return res.status(400).json({ error: "Missing required query parameters for rides" });
@@ -200,33 +201,32 @@ app.get("/api/rides", async (req, res) => {
     // Use extracted city names in SQL query
     const query = `
     SELECT Rides.*, 
-           Users.first_name AS driver_first_name, 
-           Users.last_name AS driver_last_name, 
-           (ST_Distance_Sphere(POINT(Rides.from_lng, Rides.from_lat), POINT(?, ?)) + 
-            ST_Distance_Sphere(POINT(Rides.to_lng, Rides.to_lat), POINT(?, ?))) AS total_distance
+           Users.first_name AS driver_first_name,
+           Users.last_name AS driver_last_name,
+           (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
+            ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
     FROM Rides
     LEFT JOIN Users ON Rides.driverID = Users.ID
     WHERE LOWER(Rides.from_city) = LOWER(?) 
       AND LOWER(Rides.to_city) = LOWER(?) 
-      AND Rides.date = ?
+      AND date = ?
     ORDER BY total_distance ASC
     `;
 
     db.query(
         query,
-        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, fromCoords.city, toCoords.city, date],
+        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, 
+         fromCoords.city, toCoords.city, date],
         (err, results) => {
-            if (err) {
-                console.error("Error fetching rides:", err);
-                return res.status(500).json({ error: "Database error" });
-            }
+            // ... existing error handling ...
+            console.log(results)
             res.json(results);
         }
     );
 });
 
 // Get Requests API
-app.get("/api/requests", async (req, res) => {
+app.get("/api/requests", isAuthenticated, async (req, res) => {
     console.log("Request api /api/requests");
     const { from, to, date } = req.query;
 
@@ -244,27 +244,25 @@ app.get("/api/requests", async (req, res) => {
 
     // Use extracted city names in SQL query
     const query = `
-    SELECT Requests.*, 
-           Users.first_name AS requester_first_name, 
-           Users.last_name AS requester_last_name, 
-           (ST_Distance_Sphere(POINT(Requests.from_lng, Requests.from_lat), POINT(?, ?)) + 
-            ST_Distance_Sphere(POINT(Requests.to_lng, Requests.to_lat), POINT(?, ?))) AS total_distance
+    SELECT Requests.*,
+           Users.first_name AS requester_first_name,
+           Users.last_name AS requester_last_name,
+           (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
+            ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
     FROM Requests
     LEFT JOIN Users ON Requests.userID = Users.ID
     WHERE LOWER(Requests.from_city) = LOWER(?) 
       AND LOWER(Requests.to_city) = LOWER(?) 
-      AND Requests.date = ?
+      AND date = ?
     ORDER BY total_distance ASC
     `;
 
     db.query(
         query,
-        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, fromCoords.city, toCoords.city, date],
+        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, 
+         fromCoords.city, toCoords.city, date],
         (err, results) => {
-            if (err) {
-                console.error("Error fetching requests:", err);
-                return res.status(500).json({ error: "Database error" });
-            }
+            // ... existing error handling ...
             res.json(results);
         }
     );

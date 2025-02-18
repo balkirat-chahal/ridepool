@@ -1,14 +1,19 @@
 import RideRequestCard from "./RideRequestCard.jsx";
 import SearchBar from "./SearchBar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from 'react-router-dom';
 
 export default function Requests() {
   const [filters, setFilters] = useState({ from: "", to: "", date: "" });
   const [rideRequests, setRideRequests] = useState([]);
+  const initialUrl = useRef('');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("Sending requests get");
+    initialUrl.current = window.location.pathname + window.location.search;
     const queryParams = new URLSearchParams(window.location.search);
     setFilters({
       from: queryParams.get("from") || "",
@@ -18,13 +23,21 @@ export default function Requests() {
   }, []);
 
   useEffect(() => {
-    axios
-      .get("/api/requests", { params: filters })
-      .then((response) => {
+    axios.get("/api/requests", { params: filters })
+      .then(response => {
         console.log("Ride requests:", response.data);
         setRideRequests(response.data);
       })
-      .catch((error) => console.error("Error fetching ride requests:", error));
+      .catch(error => {
+        if (error.response && error.response.status === 401) {
+          // Redirect to login page with the 'from' state
+          // const url = window.location.pathname + window.location.search;
+          console.log("Requests URL: ", initialUrl)
+          navigate('/login', { state: { from: initialUrl.current } });
+        } else {
+          console.error("Error fetching ride offers:", error);
+        }
+      });
   }, [filters]);
 
   return (
