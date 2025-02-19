@@ -344,12 +344,101 @@ app.post("/api/requests/new", isAuthenticated, async (req, res) => {
 });
 
 
+app.get("/api/rides/:id", isAuthenticated, (req, res) => {
+    const rideId = req.params.id;
 
+    const query = `
+        SELECT R.*, U.first_name, U.last_name, U.email, V.make, V.model, V.year 
+        FROM Rides R
+        JOIN Users U ON R.driverID = U.ID
+        JOIN Vehicles V ON U.ID = V.ownerID
+        WHERE R.TID = ?
+    `;
 
-app.get("/api/rides/:id", (req, res) => {
-    res.json({ message: `GET /api/rides/${req.params.id} - Dummy Response` });
+    db.query(query, [rideId], (err, rideResults) => {
+        if (err) {
+            console.error("Error fetching ride details:", err);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (rideResults.length === 0) {
+            return res.status(404).json({ message: "Ride not found" });
+        }
+
+        const rideData = rideResults[0];
+
+        const responseData = {
+            ride: {
+                from: `${rideData.from_street}, ${rideData.from_city}, ${rideData.from_province}`,
+                to: `${rideData.to_street}, ${rideData.to_city}, ${rideData.to_province}`,
+                date: rideData.date,
+                time: rideData.time,
+                type: rideData.type,
+                seats: rideData.seats,
+                price: rideData.price,
+                status: rideData.status,
+                coordinates: {
+                    from: { lat: rideData.from_lat, lng: rideData.from_lng },
+                    to: { lat: rideData.to_lat, lng: rideData.to_lng }
+                }
+            },
+            driver: {
+                name: `${rideData.first_name} ${rideData.last_name}`,
+                email: rideData.email
+            },
+            vehicle: {
+                make: rideData.make,
+                model: rideData.model,
+                year: rideData.year
+            }
+        };
+
+        res.json(responseData);
+    });
 });
 
-app.get("/api/requests/:id", (req, res) => {
-    res.json({ message: `GET /api/requests/${req.params.id} - Dummy Response` });
+
+app.get("/api/requests/:id", isAuthenticated, (req, res) => {
+    const requestId = req.params.id;
+
+    const query = `
+        SELECT R.*, U.first_name, U.last_name, U.email 
+        FROM Requests R
+        JOIN Users U ON R.userID = U.ID
+        WHERE R.RID = ?
+    `;
+
+    db.query(query, [requestId], (err, requestResults) => {
+        if (err) {
+            console.error("Error fetching request details:", err);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (requestResults.length === 0) {
+            return res.status(404).json({ message: "Request not found" });
+        }
+
+        const requestData = requestResults[0];
+
+        const responseData = {
+            request: {
+                from: `${requestData.from_street}, ${requestData.from_city}, ${requestData.from_province}`,
+                to: `${requestData.to_street}, ${requestData.to_city}, ${requestData.to_province}`,
+                date: requestData.date,
+                time: requestData.time,
+                price: requestData.price,
+                coordinates: {
+                    from: { lat: requestData.from_lat, lng: requestData.from_lng },
+                    to: { lat: requestData.to_lat, lng: requestData.to_lng }
+                }
+            },
+            user: {
+                name: `${requestData.first_name} ${requestData.last_name}`,
+                email: requestData.email
+            }
+        };
+
+        res.json(responseData);
+    });
 });
+

@@ -12,6 +12,8 @@ import LoginPage from './components/LoginPage.jsx';
 import PostRequestForm from './components/PostRequestForm.jsx';
 import PostRideForm from './components/PostRideForm.jsx';
 import Requests from './components/Requests.jsx';
+import RideInfo from './components/RideInfo.jsx';
+import RequestInfo from './components/RequestInfo.jsx';
 
 function App() {
 
@@ -26,6 +28,8 @@ function App() {
         <Route path="/newrequest" element={<PostRequestForm/>}></Route>
         <Route path="/signup" element={<SignupPage/>}></Route>
         <Route path="/login" element={<LoginPage/>}></Route>
+        <Route path="/rides/:id" element={<RideInfo/>}/>
+        <Route path="/requests/:id" element={<RequestInfo/>}/>
       </Routes>
       <Footer />
     </>
