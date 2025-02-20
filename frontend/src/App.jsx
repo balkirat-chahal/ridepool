@@ -14,6 +14,8 @@ import PostRideForm from './components/PostRideForm.jsx';
 import Requests from './components/Requests.jsx';
 import RideInfo from './components/RideInfo.jsx';
 import RequestInfo from './components/RequestInfo.jsx';
+import { RideBookings } from './components/RideBookings.jsx';
+import { RequestBookings } from './components/RequestBookings.jsx';
 
 function App() {
 
@@ -30,6 +32,9 @@ function App() {
         <Route path="/login" element={<LoginPage/>}></Route>
         <Route path="/rides/:id" element={<RideInfo/>}/>
         <Route path="/requests/:id" element={<RequestInfo/>}/>
+
+        <Route path="/ridebookings" element={<RideBookings />} />
+        <Route path="/requestbookings" element={<RequestBookings />} />
       </Routes>
       <Footer />
     </>

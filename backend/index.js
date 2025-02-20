@@ -442,6 +442,40 @@ app.get("/api/requests/:id", isAuthenticated, (req, res) => {
     });
 });
 
+app.get("/api/ridebookings", isAuthenticated, (req, res) => {
+    const driverID = req.user.ID;
+    const query = `
+        SELECT 
+    CONCAT(r.TID, '-', u.ID) AS id,
+    r.TID AS rideID,
+    u.ID AS riderID,
+    CONCAT(u.first_name, ' ', u.last_name) AS username,
+    r.date AS fromDate,
+    r.time AS fromTime,
+    r.from_city AS fromCity,
+    r.date AS toDate, 
+    r.time AS toTime,
+    r.to_city AS toCity,
+    r.price,
+    r.seats AS seatsLeft,
+    b.status
+FROM Bookings b
+JOIN Rides r ON b.rideID = r.TID
+JOIN Users u ON b.riderID = u.ID
+WHERE r.driverID = ?;
+    `;
+    
+    db.query(query, [driverID], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+        // Respond with the ride bookings for rides you are driving
+        res.status(200).json({ bookings: results });
+    });
+});
+
+
 app.post("/api/ridebookings/new", isAuthenticated, (req, res) => {
     const { rideID } = req.body;
     const riderID = req.user.ID;
@@ -491,6 +525,35 @@ app.post("/api/ridebookings/new", isAuthenticated, (req, res) => {
 });
 
 
+app.get("/api/requestbookings", isAuthenticated, (req, res) => {
+    const userID = req.user.ID;
+    const query = `
+        SELECT 
+    CONCAT(req.RID, '-', u.ID) AS id,
+    u.ID AS driverID,
+    CONCAT(u.first_name, ' ', u.last_name) AS username,
+    req.from_city AS fromCity,
+    req.to_city AS toCity,
+    req.date,
+    req.time,
+    req.price,
+    1 AS riders,  
+    rb.status
+FROM RequestBookings rb
+JOIN Requests req ON rb.requestID = req.RID
+JOIN Users u ON rb.driverID = u.ID
+WHERE req.userID = ?;
+    `;
+    
+    db.query(query, [userID], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+        // Respond with the driver offers on your requests
+        res.status(200).json({ requestBookings: results });
+    });
+});
 
 
 app.post("/api/requestbookings/new", isAuthenticated, (req, res) => {
