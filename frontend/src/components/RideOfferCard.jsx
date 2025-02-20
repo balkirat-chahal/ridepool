@@ -1,7 +1,9 @@
 import { Avatar } from "@mui/material";
 import { CheckCircle, AcUnit, People, ArrowRightAlt } from "@mui/icons-material";
+import { useNavigate } from 'react-router-dom';
 
 export default function RideOfferCard({
+  id,
   username,
   profilePic,
   fromDate,
@@ -14,8 +16,13 @@ export default function RideOfferCard({
   price,
   seatsLeft,
 }) {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    console.log("OfferCard Clicked");
+    navigate("/rides/" + id);
+  }
   return (
-    <div className="group border border-gray-200 rounded-xl p-4 w-full hover:shadow-lg transition-all duration-300 my-3 mx-auto bg-white">
+    <div onClick={handleClick} className="group border border-gray-200 rounded-xl p-4 w-full hover:shadow-lg transition-all duration-300 my-3 mx-auto bg-white">
       {/* Header Section */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">

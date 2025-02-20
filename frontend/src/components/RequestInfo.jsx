@@ -16,6 +16,33 @@ const RequestInfo = () => {
 
   const navigate = useNavigate();
 
+  const handleOffer = async () => {
+    try {
+        const response = await axios.post('/api/requestbookings/new', 
+            { requestID: id }, 
+            {
+                headers: { 
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (response.status === 201) {
+            navigate('/bookings'); // Redirect to offers page
+        }
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            navigate("/login", { state: { from: initialUrl.current } });
+        } else if (error.response) {
+            alert(`Offer failed: ${error.response.data.message}`);
+        } else {
+            console.error("Offer error:", error);
+            alert("Offer failed. Please try again.");
+        }
+    }
+};
+
+
   useEffect(() => {
     initialUrl.current = window.location.pathname + window.location.search;
   }, []);
@@ -108,6 +135,7 @@ useEffect(() => {
 
       <div className="text-center">
                 <Button
+                    onClick={handleOffer}
                     variant="contained"
                     size="large"
                     sx={{

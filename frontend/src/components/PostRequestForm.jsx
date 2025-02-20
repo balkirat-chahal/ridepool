@@ -110,7 +110,7 @@ const PostRequestForm = () => {
                 required
                 value={formData.price}
                 onChange={(e) => setFormData({...formData, price: e.target.value})}
-                InputProps={{ startAdornment: '₹' }}
+                InputProps={{ startAdornment: '$' }}
               />
 
               {/* <TextField

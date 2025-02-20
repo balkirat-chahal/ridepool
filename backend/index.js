@@ -442,3 +442,101 @@ app.get("/api/requests/:id", isAuthenticated, (req, res) => {
     });
 });
 
+app.post("/api/ridebookings/new", isAuthenticated, (req, res) => {
+    const { rideID } = req.body;
+    const riderID = req.user.ID;
+
+    if (!rideID) {
+        return res.status(400).json({ message: "Ride ID is required" });
+    }
+
+    // Check for existing booking
+    const checkQuery = `
+        SELECT * FROM Bookings 
+        WHERE rideID = ? AND riderID = ?
+    `;
+
+    db.query(checkQuery, [rideID, riderID], (checkErr, checkResults) => {
+        if (checkErr) {
+            console.error("Database error:", checkErr);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (checkResults.length > 0) {
+            return res.status(409).json({ message: "You already booked this ride" });
+        }
+
+        // Create new booking
+        const insertQuery = `
+            INSERT INTO Bookings (rideID, riderID, status)
+            VALUES (?, ?, 'pending')
+        `;
+
+        db.query(insertQuery, [rideID, riderID], (insertErr, insertResults) => {
+            if (insertErr) {
+                console.error("Database error:", insertErr);
+                return res.status(500).json({ message: "Internal server error" });
+            }
+
+            res.status(201).json({ 
+                message: "Booking created successfully",
+                booking: {
+                    rideID,
+                    riderID,
+                    status: 'pending'
+                }
+            });
+        });
+    });
+});
+
+
+
+
+app.post("/api/requestbookings/new", isAuthenticated, (req, res) => {
+    const { requestID } = req.body;
+    const driverID = req.user.ID;
+
+    if (!requestID) {
+        return res.status(400).json({ message: "Request ID is required" });
+    }
+
+    // Check for existing offer
+    const checkQuery = `
+        SELECT * FROM RequestBookings 
+        WHERE driverID = ? AND requestID = ?
+    `;
+
+    db.query(checkQuery, [driverID, requestID], (checkErr, checkResults) => {
+        if (checkErr) {
+            console.error("Database error:", checkErr);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (checkResults.length > 0) {
+            return res.status(409).json({ message: "You have already made an offer for this request" });
+        }
+
+        // Create new offer
+        const insertQuery = `
+            INSERT INTO RequestBookings (driverID, requestID, status)
+            VALUES (?, ?, 'pending')
+        `;
+
+        db.query(insertQuery, [driverID, requestID], (insertErr, insertResults) => {
+            if (insertErr) {
+                console.error("Database error:", insertErr);
+                return res.status(500).json({ message: "Internal server error" });
+            }
+
+            res.status(201).json({ 
+                message: "Offer created successfully",
+                offer: {
+                    driverID,
+                    requestID,
+                    status: 'pending'
+                }
+            });
+        });
+    });
+});

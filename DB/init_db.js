@@ -58,6 +58,16 @@ CREATE TABLE IF NOT EXISTS Bookings (
     FOREIGN KEY (riderID) REFERENCES Users(ID) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS RequestBookings (
+    driverID INT,
+    requestID INT,
+    status ENUM('pending', 'confirmed', 'completed') NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (driverID, requestID),
+    FOREIGN KEY (driverID) REFERENCES Users(ID) ON DELETE CASCADE,
+    FOREIGN KEY (requestID) REFERENCES Requests(RID) ON DELETE CASCADE
+);
+
+
 
 CREATE TABLE IF NOT EXISTS Requests (
     RID INT AUTO_INCREMENT PRIMARY KEY,

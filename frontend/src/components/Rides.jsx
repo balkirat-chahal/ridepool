@@ -51,6 +51,7 @@ export default function Rides() {
           {rideOffers.map((offer, index) => (
             <RideOfferCard
               key={offer.TID || index}
+              id={offer.TID}
               username={`${offer.driver_first_name} ${offer.driver_last_name}` || "Unknown Driver"}
               profilePic="https://via.placeholder.com/80"
               fromCity={`${offer.from_city}, ${offer.from_province}, Canada`}

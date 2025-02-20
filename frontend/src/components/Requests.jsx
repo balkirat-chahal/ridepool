@@ -51,8 +51,9 @@ export default function Requests() {
           {rideRequests.map((request, index) => (
             <RideRequestCard
               key={request.RID || index}
+              id={request.RID}
               username={`${request.requester_first_name} ${request.requester_last_name}`}
-              profilePic="https://via.placeholder.com/80"
+              profilePic=""
               from={`${request.from_city}, ${request.from_province}, Canada`}
               to={`${request.to_city}, ${request.to_province}, Canada`}
               date={new Date(request.date).toISOString().split("T")[0]}

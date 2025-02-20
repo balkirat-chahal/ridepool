@@ -17,6 +17,32 @@ const RideInfo = () => {
 
     const navigate = useNavigate();
 
+    const handleBooking = async () => {
+        try {
+            const response = await axios.post('/api/ridebookings/new', 
+                { rideID: id }, 
+                {
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+    
+            if (response.status === 201) {
+                navigate('/bookings'); // Redirect to bookings page
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                navigate("/login", { state: { from: initialUrl.current } });
+            } else if (error.response) {
+                alert(`Booking failed: ${error.response.data.message}`);
+            } else {
+                console.error("Booking error:", error);
+                alert("Booking failed. Please try again.");
+            }
+        }
+    };
+
     useEffect(() => {
         initialUrl.current = window.location.pathname + window.location.search;
       }, []);
@@ -106,6 +132,7 @@ const RideInfo = () => {
 
             <div className="text-center">
                 <Button
+                    onClick={handleBooking}
                     variant="contained"
                     size="large"
                     sx={{
