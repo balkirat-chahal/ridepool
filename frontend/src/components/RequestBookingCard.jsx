@@ -87,7 +87,7 @@ function RequestBookingCard({
           <span className="text-xs text-gray-500">max price</span>
           <span className="text-xl font-bold text-purple-600">${price}</span>
         </div>
-        <Button variant="contained" className="bg-green-500 hover:bg-green-700" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
+        <Button onClick={handleConfirmRequest} variant="contained" className="bg-green-500 hover:bg-green-700" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
           Confirm
         </Button>
       </div>

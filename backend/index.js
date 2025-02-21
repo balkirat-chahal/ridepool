@@ -174,103 +174,184 @@ app.post('/api/login', passport.authenticate('local'), (req, res) => {
     res.json({ message: 'Login successful', user: req.user });
 });
 
+app.post('/api/logout', (req, res) => {
+    req.logout((err) => {
+        if (err) {
+            console.error("Error logging out:", err);
+            return res.status(500).json({ message: 'Error logging out' });
+        }
+        console.log("Logged Out");
+        res.clearCookie('connect.sid');
+        res.json({ message: 'Logout successful' });
+    });
+});
+
 app.get('/api', (req, res) => {
     console.log('Received Request');
     res.send('Received Request');
 });
 
 app.get('/api/authenticate', isAuthenticated, (req, res) => {
-    res.send('Authenticated');
+    res.json({ authenticated: true, user: req.user });
 });
+
 
 // Get Rides API
 // Get Rides API
 app.get("/api/rides", isAuthenticated, async (req, res) => {
     console.log("Request api /api/rides");
     const { from, to, date } = req.query;
-
-
+  
     if (!from || !to || !date) {
-        return res.status(400).json({ error: "Missing required query parameters for rides" });
+      return res.status(400).json({ error: "Missing required query parameters for rides" });
     }
-
-    // Get coordinates for from and to locations
+  
     const fromCoords = await getCoordinates(from);
     const toCoords = await getCoordinates(to);
-
+  
     if (!fromCoords || !toCoords) {
-        return res.status(500).json({ error: "Failed to fetch coordinates" });
+      return res.status(500).json({ error: "Failed to fetch coordinates" });
     }
-
-    // Use extracted city names in SQL query
+  
     const query = `
-    SELECT Rides.*, 
-           Users.first_name AS driver_first_name,
-           Users.last_name AS driver_last_name,
-           (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
-            ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
-    FROM Rides
-    LEFT JOIN Users ON Rides.driverID = Users.ID
-    WHERE LOWER(Rides.from_city) = LOWER(?) 
-      AND LOWER(Rides.to_city) = LOWER(?) 
-      AND date = ?
-    ORDER BY total_distance ASC
-    `;
-
-    db.query(
-        query,
-        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, 
-         fromCoords.city, toCoords.city, date],
-        (err, results) => {
-            // ... existing error handling ...
-            console.log(results)
-            res.json(results);
-        }
-    );
-});
+  SELECT Rides.*, 
+         Users.first_name AS driver_first_name,
+         Users.last_name AS driver_last_name,
+         (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
+          ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
+  FROM Rides
+  LEFT JOIN Users ON Rides.driverID = Users.ID
+  WHERE date = ?
+    AND (
+      -- Case 1: Both cities match exactly.
+      (LOWER(Rides.from_city) = LOWER(?) AND LOWER(Rides.to_city) = LOWER(?))
+      OR
+      -- Case 2: From city matches, but to city does not.
+      (LOWER(Rides.from_city) = LOWER(?) AND LOWER(Rides.to_city) <> LOWER(?) AND
+        ST_Distance_Sphere(POINT(?, ?), POINT(?, ?)) < 
+        ST_Distance_Sphere(POINT(?, ?), POINT(Rides.to_lng, Rides.to_lat))
+      )
+      OR
+      -- Case 3: To city matches, but from city does not.
+      (LOWER(Rides.to_city) = LOWER(?) AND LOWER(Rides.from_city) <> LOWER(?) AND
+        ST_Distance_Sphere(POINT(?, ?), POINT(?, ?)) < 
+        ST_Distance_Sphere(POINT(Rides.from_lng, Rides.from_lat), POINT(?, ?))
+      )
+    )
+  ORDER BY total_distance ASC
+  `;
+  
+    const params = [
+      // Total distance calculation (using passed-in from & to coordinates)
+      fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat,
+      // Date
+      date,
+      // Case 1: Exact match.
+      fromCoords.city, toCoords.city,
+      // Case 2: From-city match only:
+      fromCoords.city, toCoords.city,
+      // Left side: distance(query.from, query.to)
+      fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat,
+      // Right side: distance(query.from, ride.to)
+      fromCoords.lng, fromCoords.lat,
+      // Case 3: To-city match only:
+      toCoords.city, fromCoords.city,
+      // Left side: distance(query.from, query.to)
+      fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat,
+      // Right side: distance(ride.from, query.to)
+      toCoords.lng, toCoords.lat
+    ];
+  
+    db.query(query, params, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Database error" });
+      }
+      console.log(results);
+      res.json(results);
+    });
+  });
+  
 
 // Get Requests API
 app.get("/api/requests", isAuthenticated, async (req, res) => {
     console.log("Request api /api/requests");
     const { from, to, date } = req.query;
-
+  
     if (!from || !to || !date) {
-        return res.status(400).json({ error: "Missing required query parameters for requests" });
+      return res.status(400).json({ error: "Missing required query parameters for requests" });
     }
-
-    // Get coordinates for from and to locations
+  
     const fromCoords = await getCoordinates(from);
     const toCoords = await getCoordinates(to);
-
+  
     if (!fromCoords || !toCoords) {
-        return res.status(500).json({ error: "Failed to fetch coordinates" });
+      return res.status(500).json({ error: "Failed to fetch coordinates" });
     }
-
-    // Use extracted city names in SQL query
+  
     const query = `
-    SELECT Requests.*,
-           Users.first_name AS requester_first_name,
-           Users.last_name AS requester_last_name,
-           (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
-            ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
-    FROM Requests
-    LEFT JOIN Users ON Requests.userID = Users.ID
-    WHERE LOWER(Requests.from_city) = LOWER(?) 
-      AND LOWER(Requests.to_city) = LOWER(?) 
-      AND date = ?
-    ORDER BY total_distance ASC
-    `;
-
-    db.query(
-        query,
-        [fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat, 
-         fromCoords.city, toCoords.city, date],
-        (err, results) => {
-            // ... existing error handling ...
-            res.json(results);
-        }
-    );
-});
+  SELECT Requests.*,
+         Users.first_name AS requester_first_name,
+         Users.last_name AS requester_last_name,
+         (ST_Distance_Sphere(POINT(from_lng, from_lat), POINT(?, ?)) + 
+          ST_Distance_Sphere(POINT(to_lng, to_lat), POINT(?, ?))) AS total_distance
+  FROM Requests
+  LEFT JOIN Users ON Requests.userID = Users.ID
+  WHERE date = ?
+    AND (
+      -- Case 1: Both from and to cities match exactly.
+      (LOWER(Requests.from_city) = LOWER(?) AND LOWER(Requests.to_city) = LOWER(?))
+      OR
+      -- Case 2: From city matches but to city doesn't.
+      -- Here, the stored request's "to" coordinate must be closer (i.e. not beyond)
+      -- your passed-in destination.
+      (LOWER(Requests.from_city) = LOWER(?) AND LOWER(Requests.to_city) <> LOWER(?) AND
+        ST_Distance_Sphere(POINT(?, ?), POINT(Requests.to_lng, Requests.to_lat)) < 
+        ST_Distance_Sphere(POINT(?, ?), POINT(?, ?))
+      )
+      OR
+      -- Case 3: To city matches but from city doesn't.
+      -- Here, the stored request's "from" coordinate must be closer (i.e. not before)
+      -- your passed-in origin.
+      (LOWER(Requests.to_city) = LOWER(?) AND LOWER(Requests.from_city) <> LOWER(?) AND
+        ST_Distance_Sphere(POINT(Requests.from_lng, Requests.from_lat), POINT(?, ?)) < 
+        ST_Distance_Sphere(POINT(?, ?), POINT(?, ?))
+      )
+    )
+  ORDER BY total_distance ASC
+  `;
+  
+    const params = [
+      // Total distance calculation (using passed-in from & to coordinates)
+      fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat,
+      // Date:
+      date,
+      // Case 1: Exact match (both cities match)
+      fromCoords.city, toCoords.city,
+      // Case 2: From city matches only.
+      fromCoords.city, toCoords.city,
+      // Left side: distance(query.from, stored Request.to)
+      fromCoords.lng, fromCoords.lat,
+      // Right side: distance(query.from, query.to)
+      fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat,
+      // Case 3: To city matches only.
+      toCoords.city, fromCoords.city,
+      // Left side: distance(stored Request.from, query.to)
+      toCoords.lng, toCoords.lat,
+      // Right side: distance(query.from, query.to)
+      fromCoords.lng, fromCoords.lat, toCoords.lng, toCoords.lat
+    ];
+  
+    db.query(query, params, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Database error" });
+      }
+      res.json(results);
+    });
+  });
+  
+  
 
 // My Rides API
 app.get("/api/rides/my", isAuthenticated, async (req, res) => {
