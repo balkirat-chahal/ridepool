@@ -272,6 +272,99 @@ app.get("/api/requests", isAuthenticated, async (req, res) => {
     );
 });
 
+// My Rides API
+app.get("/api/rides/my", isAuthenticated, async (req, res) => {
+    console.log("Request api /api/rides/my");
+    const query = `
+    SELECT Rides.*, 
+           Users.first_name AS driver_first_name,
+           Users.last_name AS driver_last_name
+    FROM Rides
+    LEFT JOIN Users ON Rides.driverID = Users.ID
+    WHERE Rides.driverID = ?
+    `;
+
+    db.query(
+        query,
+        [req.user.ID],
+        (err, results) => {
+            // ... existing error handling ...
+            res.json(results);
+        }
+    );
+});
+
+// My Requests API
+app.get("/api/requests/my", isAuthenticated, async (req, res) => {
+    console.log("Request api /api/requests/my");
+    const query = `
+    SELECT Requests.*,
+           Users.first_name AS requester_first_name,
+           Users.last_name AS requester_last_name
+    FROM Requests
+    LEFT JOIN Users ON Requests.userID = Users.ID
+    WHERE Requests.userID = ?
+    `;
+
+    db.query(
+        query,
+        [req.user.ID],
+        (err, results) => {
+            // ... existing error handling ...
+            res.json(results);
+        }
+    );
+});
+
+// Confirm a ride booking (driver confirms)
+app.post("/api/rides/confirm", isAuthenticated, async (req, res) => {
+    console.log("Request api /api/rides/confirm");
+
+    const [rideID, riderID] = req.body.id.split("-");
+
+    const query = `
+        UPDATE Bookings
+        SET status = 'confirmed'
+        WHERE rideID = ? AND riderID = ?
+    `;
+
+    db.query(query, [rideID, riderID], (err, result) => {
+        if (err) {
+            console.error("Error confirming ride booking:", err);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Booking not found" });
+        }
+        res.json({ message: "Ride booking confirmed" });
+    });
+});
+
+// Confirm a request booking (user confirms)
+app.post("/api/requests/confirm", isAuthenticated, async (req, res) => {
+    console.log("Request api /api/requests/confirm");
+
+    const [requestID, driverID] = req.body.id.split("-");
+
+    const query = `
+        UPDATE RequestBookings
+        SET status = 'confirmed'
+        WHERE driverID = ? AND requestID = ?
+    `;
+
+    db.query(query, [driverID, requestID], (err, result) => {
+        if (err) {
+            console.error("Error confirming request booking:", err);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Request booking not found" });
+        }
+        res.json({ message: "Request booking confirmed" });
+    });
+});
+
+
 
 app.post("/api/rides/new", isAuthenticated, async (req, res) => {
     console.log("Received ride data:", req.body);
@@ -603,3 +696,127 @@ app.post("/api/requestbookings/new", isAuthenticated, (req, res) => {
         });
     });
 });
+
+app.get("/api/bookings", isAuthenticated, (req, res) => {
+    const currentUserId = req.user.ID;
+  
+    // Query for all the rides/requests where the current user is driving
+    const drivingQuery = `
+      SELECT 
+        CONCAT(r.TID, '-', u.ID) AS id,
+        'ride' AS bookingType,
+        r.TID AS bookingId,
+        u.ID AS otherUserID,
+        CONCAT(u.first_name, ' ', u.last_name) AS otherUsername,
+        r.from_city AS fromCity,
+        r.from_province AS fromProvince,
+        r.from_lat,
+        r.from_lng,
+        r.to_city AS toCity,
+        r.to_province AS toProvince,
+        r.to_lat,
+        r.to_lng,
+        r.date,
+        r.time,
+        r.price,
+        r.seats AS seatsLeft,
+        b.status AS bookingStatus
+      FROM Bookings b
+      JOIN Rides r ON b.rideID = r.TID
+      JOIN Users u ON b.riderID = u.ID
+      WHERE r.driverID = ? AND b.status = 'confirmed'
+      UNION ALL
+      SELECT 
+        CONCAT(req.RID, '-', u.ID) AS id,
+        'request' AS bookingType,
+        req.RID AS bookingId,
+        u.ID AS otherUserID,
+        CONCAT(u.first_name, ' ', u.last_name) AS otherUsername,
+        req.from_city AS fromCity,
+        req.from_province AS fromProvince,
+        req.from_lat,
+        req.from_lng,
+        req.to_city AS toCity,
+        req.to_province AS toProvince,
+        req.to_lat,
+        req.to_lng,
+        req.date,
+        req.time,
+        req.price,
+        NULL AS seatsLeft,
+        rb.status AS bookingStatus
+      FROM RequestBookings rb
+      JOIN Requests req ON rb.requestID = req.RID
+      JOIN Users u ON req.userID = u.ID
+      WHERE rb.driverID = ? AND rb.status = 'confirmed'
+    `;
+  
+    // Query for all the rides/requests where the current user is riding
+    const ridingQuery = `
+      SELECT 
+        CONCAT(r.TID, '-', u.ID) AS id,
+        'ride' AS bookingType,
+        r.TID AS bookingId,
+        u.ID AS otherUserID,
+        CONCAT(u.first_name, ' ', u.last_name) AS otherUsername,
+        r.from_city AS fromCity,
+        r.from_province AS fromProvince,
+        r.from_lat,
+        r.from_lng,
+        r.to_city AS toCity,
+        r.to_province AS toProvince,
+        r.to_lat,
+        r.to_lng,
+        r.date,
+        r.time,
+        r.price,
+        r.seats AS seatsLeft,
+        b.status AS bookingStatus
+      FROM Bookings b
+      JOIN Rides r ON b.rideID = r.TID
+      JOIN Users u ON r.driverID = u.ID
+      WHERE b.riderID = ? AND b.status = 'confirmed'
+      UNION ALL
+      SELECT 
+        CONCAT(req.RID, '-', u.ID) AS id,
+        'request' AS bookingType,
+        req.RID AS bookingId,
+        u.ID AS otherUserID,
+        CONCAT(u.first_name, ' ', u.last_name) AS otherUsername,
+        req.from_city AS fromCity,
+        req.from_province AS fromProvince,
+        req.from_lat,
+        req.from_lng,
+        req.to_city AS toCity,
+        req.to_province AS toProvince,
+        req.to_lat,
+        req.to_lng,
+        req.date,
+        req.time,
+        req.price,
+        NULL AS seatsLeft,
+        rb.status AS bookingStatus
+      FROM RequestBookings rb
+      JOIN Requests req ON rb.requestID = req.RID
+      JOIN Users u ON rb.driverID = u.ID
+      WHERE req.userID = ? AND rb.status = 'confirmed'
+    `;
+  
+    // Execute the driving query first
+    db.query(drivingQuery, [currentUserId, currentUserId], (err, drivingResults) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      // Then execute the riding query
+      db.query(ridingQuery, [currentUserId, currentUserId], (err, ridingResults) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ message: "Internal server error" });
+        }
+        // Send the combined response with separate driving and riding arrays.
+        res.status(200).json({ driving: drivingResults, riding: ridingResults });
+      });
+    });
+  });
+  

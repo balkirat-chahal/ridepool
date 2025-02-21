@@ -2,6 +2,7 @@ import React from 'react';
 import { Avatar, Button } from '@mui/material';
 import { CheckCircle, AcUnit, ArrowRightAlt } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const RideBookingOfferCard = ({
   id,
@@ -19,13 +20,26 @@ const RideBookingOfferCard = ({
   status,
 }) => {
   const navigate = useNavigate();
-  const handleClick = () => {
-    console.log("OfferCard Clicked");
-    navigate("/rides/" + id);
-  }
+
+  const handleClick = async () => {
+    try {
+      const response = await axios.post(
+        "/api/rides/confirm",
+        { id },
+        { withCredentials: true }
+      );
+      console.log("Ride booking confirmed:", response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/login", { state: { from: "/ridebookings" } });
+      } else {
+        console.log("Error confirming ride booking:", error);
+      }
+    }
+  };
 
   return (
-    <div onClick={handleClick} className="group border border-gray-200 rounded-xl p-4 w-full hover:shadow-lg transition-all duration-300 my-3 mx-auto bg-white cursor-pointer">
+    <div className="group border border-gray-200 rounded-xl p-4 w-full hover:shadow-lg transition-all duration-300 my-3 mx-auto bg-white cursor-pointer">
       {/* Header Section */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -77,7 +91,7 @@ const RideBookingOfferCard = ({
           <span className="text-xs text-gray-500">from</span>
           <span className="text-xl font-bold text-purple-600">${price}</span>
         </div>
-        <Button variant="contained" className="bg-green-500 hover:bg-green-700" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
+        <Button onClick={handleClick} variant="contained" className="bg-green-500 hover:bg-green-700" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
           Confirm
         </Button>
       </div>

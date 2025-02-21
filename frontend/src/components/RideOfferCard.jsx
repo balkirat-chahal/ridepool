@@ -77,7 +77,7 @@ export default function RideOfferCard({
         
         <div className="flex items-baseline gap-1">
           <span className="text-xs text-gray-500">from</span>
-          <span className="text-xl font-bold text-purple-600">${price}</span>
+          <span className="text-xl font-bold text-purple-600">{price}</span>
         </div>
       </div>
     </div>

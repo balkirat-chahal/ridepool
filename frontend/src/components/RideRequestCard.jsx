@@ -68,7 +68,7 @@ function RideRequestCard({
         
         <div className="flex items-baseline gap-1">
           <span className="text-xs text-gray-500">max price</span>
-          <span className="text-xl font-bold text-purple-600">${price}</span>
+          <span className="text-xl font-bold text-purple-600">{price}</span>
         </div>
       </div>
     </div>
